@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "healthon"
-version = "0.1.0"
-description = ""
+version = "1.0.0"
+description = "Python library for the Health Planet API."
 authors = ["HASEBA Junya <7pairs@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -9,6 +9,7 @@ python = "^3.8"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+coveralls = "^2.0.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
