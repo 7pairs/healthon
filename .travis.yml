@@ -1,17 +1,14 @@
 language: python
 
 python:
-    - 3.2
-    - 3.3
-    - 3.4
+    - 3.8
 
 install:
-    - pip install --use-mirrors -r requirements.txt
-    - pip install coveralls
+    - pip install poetry
+    - poetry install
 
 script:
-    - nosetests --with-coverage --cover-package=wp2mt
+    - poetry run coverage run -m py.test
 
 after_success:
-    - coveralls
-
+    - poetry run coveralls
