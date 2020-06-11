@@ -9,6 +9,7 @@ python = "^3.8"
 requests = "^2.23.0"
 pyppeteer = "^0.2.2"
 dataclasses-json = "^0.4.5"
+click = "^7.1.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
