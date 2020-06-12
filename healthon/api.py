@@ -1,16 +1,18 @@
 import asyncio
-from dataclasses import dataclass
-import enum
-import os
+from dataclasses import dataclass, field
+from datetime import datetime
+from decimal import Decimal
+from enum import Enum
+import json
 from typing import List
 import urllib.parse
 
-from dataclasses_json import dataclass_json
+from dataclasses_json import config, dataclass_json, Undefined
 import pyppeteer
 import requests
 
 
-class Scope(enum.Enum):
+class Scope(Enum):
     INNERSCAN = 'innerscan'
     SPHYGMOMANOMETER = 'sphygmomanometer'
     PEDOMETER = 'pedometer'
@@ -23,6 +25,26 @@ class Token:
     access_token: str
     expires_in: int
     refresh_token: str
+
+
+class InnerscanTag(Enum):
+    WEIGHT = '6021'
+    BODY_FAT = '6022'
+    MUSCLE_MASS = '6023'
+    MUSCLE_SCORE = '6024'
+    VISCERAL_FAT_2 = '6025'
+    VISCERAL_FAT_1 = '6026'
+    BASAL_METABOLIC_RATE = '6027'
+    BODY_AGE = '6028'
+    BONE_MASS = '6029'
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class InnerscanRecord:
+    tag: InnerscanTag
+    measured: datetime = field(metadata=config(field_name='date', decoder=lambda x: datetime.strptime(x, '%Y%m%d%H%M%S')))
+    keydata: Decimal = field(metadata=config(decoder=lambda x: Decimal(x)))
 
 
 def auth(login_id: str, password: str, client_id: str, scope: List[Scope]) -> str:
@@ -73,6 +95,15 @@ def token(client_id: str, client_secret: str, code: str) -> Token:
     return Token.from_json(response.text)
 
 
-if __name__ == '__main__':
-    code = auth(os.environ['HP_LOGIN_ID'], os.environ['HP_PASSWORD'], os.environ['HP_CLIENT_ID'], [Scope.INNERSCAN])
-    token = token(os.environ['HP_CLIENT_ID'], os.environ['HP_CLIENT_SECRET'], code)
+def innerscan(access_token: str, from_datetime: datetime, to_datetime: datetime, tag: List[InnerscanTag]) -> List[InnerscanRecord]:
+    end_point = 'https://www.healthplanet.jp/status/innerscan.json'
+    param = {
+        'access_token': access_token,
+        'date': 1,
+        'from': from_datetime.strftime('%Y%m%d%H%M%S'),
+        'to': to_datetime.strftime('%Y%m%d%H%M%S'),
+        'tag': ','.join(t.value for t in tag),
+    }
+    response = requests.post(end_point, data=param)
+    result = json.loads(response.text)['data']
+    return [InnerscanRecord.from_dict(r) for r in result]
